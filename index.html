@@ -1,0 +1,1175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="description" content="Шахматы с сюрпризами: Лудоман и рулетка, дуэль на реакцию, шашки и мини-партия внутри партии.">
+<meta name="theme-color" content="#0a0015">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Триповые шахматы">
+<meta name="format-detection" content="telephone=no">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>ТРИПОВЫЕ ШАХМАТЫ | Author: Nebo</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#0a0015;color:#fff;font-family:'Press Start 2P',monospace;display:flex;flex-direction:column;align-items:center;min-height:100vh;overflow-x:hidden}
+body.disco{animation:discoBg .4s infinite}
+@keyframes discoBg{0%{background:#f05}25%{background:#0f5}50%{background:#05f}75%{background:#ff0}100%{background:#f05}}
+body.matrix #boardCv{filter:sepia(1) hue-rotate(90deg) saturate(3) contrast(1.1)}
+body.matrix{background:#000}
+
+#mainMenu{position:fixed;inset:0;background:radial-gradient(ellipse at center,#1a0033 0%,#050010 70%,#000 100%);display:flex;flex-direction:column;align-items:center;justify-content:center;z-index:999;gap:12px;overflow-y:auto;padding:16px}
+#mainMenu h1{color:#f0f;text-shadow:0 0 30px #f0f,0 0 60px #f0f;font-size:20px;text-align:center;line-height:1.8;animation:titlePulse 2s infinite alternate}
+@keyframes titlePulse{from{text-shadow:0 0 20px #f0f}to{text-shadow:0 0 50px #f0f,0 0 100px #a0f}}
+#mainMenu .sub{color:#888;font-size:9px;margin-bottom:12px}
+#mainMenu button{width:min(340px,88vw);font-size:11px;padding:14px}
+button{font-family:'Press Start 2P',monospace;font-size:10px;padding:10px 14px;background:rgba(0,0,0,.85);color:#0ff;border:2px solid #0ff;border-radius:6px;cursor:pointer;text-transform:uppercase;transition:all .15s;box-shadow:0 0 8px rgba(0,255,255,.3)}
+button:hover:not(:disabled){background:#0ff;color:#000;box-shadow:0 0 25px #0ff;transform:scale(1.04)}
+button:disabled{opacity:.3;cursor:not-allowed;transform:none}
+button:active:not(:disabled){transform:scale(.97)}
+
+#gameWrap{display:none;flex-direction:column;align-items:center;gap:8px;padding:10px}
+#status{min-height:30px;color:#f05;text-shadow:0 0 10px #f05;font-size:11px;text-align:center;max-width:min(94vw,650px);line-height:1.6}
+#boardCv{width:min(94vw,640px);height:auto;touch-action:manipulation;-webkit-tap-highlight-color:transparent;border:3px solid #f0f;box-shadow:0 0 30px rgba(255,0,255,.4),0 0 60px rgba(0,255,255,.15);border-radius:8px;background:#111;cursor:pointer}
+.tray{min-height:26px;font-size:16px;letter-spacing:3px;color:#aaa;max-width:min(94vw,640px);text-align:center;line-height:1.4;font-family:"Segoe UI Symbol","Segoe UI Emoji","Apple Color Emoji","Noto Color Emoji",sans-serif}
+.btn-row{display:flex;gap:6px;flex-wrap:wrap;justify-content:center;max-width:min(94vw,660px)}
+.btn-sm{font-size:8px;padding:8px 10px}
+#footer{margin-top:auto;padding:12px;font-size:9px;color:#444;cursor:pointer;user-select:none;transition:color .3s}
+#footer:hover{color:#0ff;text-shadow:0 0 10px #0ff}
+
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.93);display:none;align-items:center;justify-content:center;z-index:500;backdrop-filter:blur(3px)}
+.box{background:#0d0d0d;border:3px solid gold;padding:28px;border-radius:14px;text-align:center;box-shadow:0 0 50px rgba(255,215,0,.25),inset 0 0 30px rgba(255,215,0,.05);max-width:94%;animation:boxIn .3s ease-out}
+@keyframes boxIn{from{transform:scale(.8);opacity:0}to{transform:scale(1);opacity:1}}
+.box h2{color:gold;margin-bottom:16px;font-size:14px;text-shadow:0 0 10px gold}
+.red{border-color:#f33;color:#f33;box-shadow:0 0 8px rgba(255,50,50,.3)}
+.red:hover:not(:disabled){background:#f33;color:#000;box-shadow:0 0 25px #f33}
+.black{border-color:#aaa;color:#aaa;box-shadow:0 0 8px rgba(170,170,170,.3)}
+.black:hover:not(:disabled){background:#aaa;color:#000;box-shadow:0 0 25px #aaa}
+.zero{border-color:#0f6;color:#0f6;box-shadow:0 0 8px rgba(0,255,100,.3)}
+.zero:hover:not(:disabled){background:#0f6;color:#000;box-shadow:0 0 25px #0f6}
+#rouletteText{font-size:10px;line-height:1.8;max-width:420px}
+#rouletteResult,#duelResult{margin-top:16px;font-size:12px;min-height:36px;line-height:1.6}
+#duelPhase{font-size:26px;margin:18px 0;min-height:44px;letter-spacing:2px}
+.ph-fire{color:#f00;animation:fl .12s infinite;text-shadow:0 0 20px #f00}
+.ph-wait{color:#ff0;animation:pu .5s infinite;text-shadow:0 0 15px #ff0}
+.ph-attn{color:#fff;animation:pu 1s infinite}
+@keyframes fl{0%,100%{opacity:1}50%{opacity:.15}}
+@keyframes pu{0%,100%{transform:scale(1)}50%{transform:scale(1.08)}}
+#fireBtn{border-color:#f60;color:#f60;font-size:16px;padding:18px 36px;margin-top:12px;box-shadow:0 0 15px rgba(255,100,0,.4)}
+#fireBtn:hover:not(:disabled){background:#f60;color:#000;box-shadow:0 0 40px #f60}
+#miniCv{width:min(78vw,400px);height:auto;border:2px solid #888;margin-top:10px;cursor:pointer;border-radius:4px;touch-action:manipulation}
+#miniTimer{color:#0f6;margin:10px 0;font-size:12px;text-shadow:0 0 8px #0f6}
+#miniMsg{min-height:34px;margin-top:10px;color:#fc0;font-size:9px;line-height:1.6}
+.promo-btn{font-size:32px;padding:14px 18px;margin:6px;border-color:#0ff;color:#0ff;box-shadow:0 0 10px rgba(0,255,255,.3)}
+.promo-btn:hover{background:#0ff;color:#000;box-shadow:0 0 30px #0ff}
+
+#rulesBox{max-width:min(94vw,580px);max-height:88vh;overflow-y:auto;text-align:left}
+#rulesBox h2{text-align:center}
+#rulesBox .rule{font-size:8px;line-height:2;margin:10px 0;color:#ddd}
+#rulesBox .rule b{color:#0ff}
+#rulesBox .close{display:block;margin:18px auto 0}
+#toast{position:fixed;top:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,.92);border:2px solid #f0f;color:#f0f;padding:10px 16px;border-radius:8px;font-size:9px;z-index:2000;opacity:0;pointer-events:none;transition:opacity .3s;text-align:center;max-width:90vw}
+#toast.show{opacity:1}
+</style>
+</head>
+<body>
+
+<div id="toast"></div>
+
+<div id="mainMenu">
+<h1>ТРИПОВЫЕ ШАХМАТЫ</h1>
+<div class="sub">by Nebo</div>
+<button onclick="startGame('local')">👥 Играть на одном устройстве</button>
+<button onclick="startGame('bot')">🤖 Играть с ботом</button>
+<button id="diffBtn" onclick="cycleDifficulty()">⚙️ Сложность: СРЕДНЯЯ</button>
+<button onclick="alert('Упс! Пока что не добавили :(')">🌐 Играть онлайн</button>
+<button onclick="showRules()">📖 Правила фигур</button>
+<div style="margin-top:16px;color:#0ff;font-size:10px;cursor:pointer;user-select:none" onclick="authorClick()">Created by Nebo</div>
+</div>
+
+<div id="gameWrap">
+<div id="status">Выбери режим</div>
+<div class="tray" id="trayB" title="Побито чёрными"></div>
+<canvas id="boardCv" width="640" height="640"></canvas>
+<div class="tray" id="trayW" title="Побито белыми"></div>
+<div class="btn-row">
+<button class="btn-sm" id="isagiBtn" onclick="useIsagi()">🧿 Исаги</button>
+<button class="btn-sm" id="oguriBtn" onclick="useOguri()">🐴 Огури</button>
+<button class="btn-sm" onclick="resetGame()">🔄 Сброс</button>
+<button class="btn-sm" onclick="showMenu()">🏠 Меню</button>
+<button class="btn-sm" onclick="showRules()">📖 Правила</button>
+<button class="btn-sm" id="soundBtn" onclick="toggleSound()">🔊</button>
+</div>
+<div id="footer" onclick="authorClick()">Author: Nebo</div>
+</div>
+
+<div id="rouletteOverlay" class="overlay"><div class="box">
+<h2>🎰 РУЛЕТКА ЛУДОМАНА</h2>
+<div id="rouletteText"></div>
+<div id="rouletteBtns" style="display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap">
+<button class="red" onclick="spinRoulette('red')">Красное</button>
+<button class="black" onclick="spinRoulette('black')">Чёрное</button>
+<button class="zero" onclick="spinRoulette('zero')">Зеро</button>
+</div>
+<div id="rouletteResult"></div>
+</div></div>
+
+<div id="duelOverlay" class="overlay"><div class="box">
+<h2>🤺 ДУЭЛЬ ПУШКИНА</h2>
+<div id="duelPhase" class="ph-attn">ВНИМАНИЕ...</div>
+<button id="fireBtn" onclick="duelFire()" disabled>ОГОНЬ!</button>
+<div id="duelResult"></div>
+</div></div>
+
+<div id="chessOverlay" class="overlay"><div class="box">
+<h2>♟️ ШАХМАТНАЯ ДУЭЛЬ</h2>
+<div id="miniTimer">05:00 | 05:00</div>
+<canvas id="miniCv" width="400" height="400"></canvas>
+<div id="miniMsg"></div>
+<button class="btn-sm" onclick="surrenderMini()" style="margin-top:10px">🏳️ Сдаться</button>
+</div></div>
+
+<div id="promoOverlay" class="overlay"><div class="box">
+<h2>Превращение пешки</h2>
+<button class="promo-btn" onclick="promote('q')">♛</button>
+<button class="promo-btn" onclick="promote('r')">♜</button>
+<button class="promo-btn" onclick="promote('b')">♝</button>
+<button class="promo-btn" onclick="promote('n')">♞</button>
+</div></div>
+
+<div id="rulesOverlay" class="overlay"><div class="box" id="rulesBox">
+<h2>📖 ПРАВИЛА ФИГУР</h2>
+<div class="rule"><b>♙ Пешка</b> — как в шахматах (двойной ход, взятие на проходе, превращение в ♛♜♝♞).</div>
+<div class="rule"><b>🎰 Лудоман</b> — ходит как король. Любое взятие с его участием → <b>рулетка</b>: его владелец ставит на красное/чёрное (шанс ≈48,6%) или на зеро (≈2,7%, при удаче — <b>мгновенная победа</b>). Лудоман нападает и проигрывает — ход потерян и +1 💀 (3 💀 = поражение). Лудоман защищается и выигрывает — нападавший уничтожен.</div>
+<div class="rule"><b>🐴 Огури</b> — ходит как конь. Раз за партию кнопка «Огури» даёт <b>Рывок</b>: один ход как ферзь (короля так бить нельзя).</div>
+<div class="rule"><b>🧿 Исаги</b> — ходит как король. Раз за партию кнопка «Исаги» подсвечивает <b>лучший ход</b> в позиции.</div>
+<div class="rule"><b>🃏 Джокер</b> — 1–2 клетки в любую сторону (на 2 — только через пустую клетку). Съел короля — победа.</div>
+<div class="rule"><b>👤 Шахматист</b> — на 1 клетку по горизонтали/вертикали. Любое взятие с ним → <b>шахматная дуэль</b> на мини-доске, по 5 минут каждому. Нападающий — белые.</div>
+<div class="rule"><b>⚪⚫ Шашка</b> — по диагонали вперёд, бьёт прыжком (вперёд и назад). Взятие обязательно. Дойдя до края — становится 👑.</div>
+<div class="rule"><b>👑 Дамка</b> — по диагонали на любое расстояние, бьёт прыжком через вражескую фигуру.</div>
+<div class="rule"><b>🤺 Пушкин</b> — ходит как конь. Взятие с его участием → <b>дуэль на реакцию</b>: жми ОГОНЬ только после сигнала и быстрее противника.</div>
+<div class="rule" style="color:#888">Проигравший в дуэли/рулетке нападающий погибает. Мат, пат и шах — как в обычных шахматах.</div>
+<button class="close" onclick="hideRules()">Закрыть</button>
+</div></div>
+
+<script>
+'use strict';
+// ============================================================
+// КОНСТАНТЫ
+// ============================================================
+const CELL=80, MINI_CELL=50;
+const P='p',R='r',N='n',B='b',Q='q',K='k';
+const LUDOMAN='ludoman',OGURI='oguri',ISAGI='isagi',JOKER='joker';
+const CHESSMAN='chessman',CHECKER='checker',DRAUGHTS='draughts',PUSHKIN='pushkin';
+const BACK_ROW=[LUDOMAN,OGURI,ISAGI,JOKER,K,CHESSMAN,CHECKER,PUSHKIN];
+const STD=new Set([P,R,N,B,Q,K]);
+const GAMBLERS=new Set([LUDOMAN,PUSHKIN,CHESSMAN]);
+
+const EMOJI={
+w_p:'♙',w_r:'♖',w_n:'♘',w_b:'♗',w_q:'♕',w_k:'♔',
+b_p:'♟',b_r:'♜',b_n:'♞',b_b:'♝',b_q:'♛',b_k:'♚',
+w_ludoman:'🎰',b_ludoman:'🎰',w_oguri:'🐴',b_oguri:'🐴',
+w_isagi:'🧿',b_isagi:'🧿',w_joker:'🃏',b_joker:'🃏',
+w_chessman:'👤',b_chessman:'👤',w_checker:'⚪',b_checker:'⚫',
+w_draughts:'👑',b_draughts:'👑',w_pushkin:'🤺',b_pushkin:'🤺'
+};
+const VAL={p:10,n:30,b:30,r:50,q:90,k:1000,ludoman:40,oguri:40,isagi:40,joker:80,chessman:50,checker:20,draughts:60,pushkin:40};
+
+const KNIGHT_D=[[-2,-1],[-2,1],[-1,-2],[-1,2],[1,-2],[1,2],[2,-1],[2,1]];
+const KING_D=[[-1,-1],[-1,0],[-1,1],[0,-1],[0,1],[1,-1],[1,0],[1,1]];
+const ORTH_D=[[0,1],[0,-1],[1,0],[-1,0]];
+const DIAG_D=[[1,1],[1,-1],[-1,1],[-1,-1]];
+const QUEEN_D=ORTH_D.concat(DIAG_D);
+const REDS=new Set([1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36]);
+const DIFF_NAMES=['ЛЁГКАЯ','СРЕДНЯЯ','СЛОЖНАЯ'];
+const SYM_FONT='"Segoe UI Symbol","Noto Sans Symbols 2","DejaVu Sans",Arial,sans-serif';
+const EMO_FONT='"Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",Arial,sans-serif';
+
+// ============================================================
+// СОСТОЯНИЕ
+// ============================================================
+let board=[],current='w',selected=null,legalMoves=[],gameOver=false,gameActive=false;
+let enPassant=null,promoPending=null,gameMode='local',botThinking=false,difficulty=1;
+let ludomanLosses={w:0,b:0},oguriUsed={w:false,b:false},isagiUsed={w:false,b:false};
+let oguriMode=false,hint=null,authorClicks=0;
+let rouletteCtx=null,duelCtx=null;
+let mini={active:false},miniIv=null;
+let lastMove=null,anim=null,checkSq=null;
+let captured={w:[],b:[]};
+let soundOn=true,audioCtx=null;
+
+const cv=document.getElementById('boardCv'),cx=cv.getContext('2d');
+const mv=document.getElementById('miniCv'),mcx=mv.getContext('2d');
+const statusEl=document.getElementById('status');
+
+// ============================================================
+// УТИЛИТЫ
+// ============================================================
+function opp(c){return c==='w'?'b':'w'}
+function inside(x,y){return x>=0&&x<8&&y>=0&&y<8}
+function cloneBoard(b){return b.map(r=>r.slice())}
+function findPiece(b,color,type){for(let y=0;y<8;y++)for(let x=0;x<8;x++)if(b[y][x]?.t===type&&b[y][x].c===color)return{x,y};return null}
+function colorName(c){return c==='w'?'БЕЛЫЕ':'ЧЁРНЫЕ'}
+function fmtTime(s){s=Math.max(0,s);return `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`}
+function setStatus(t){statusEl.textContent=t}
+function turnText(){return `ХОД ${current==='w'?'БЕЛЫХ':'ЧЁРНЫХ'}.${checkSq?' ШАХ!':''}`}
+function show(id){document.getElementById(id).style.display='flex'}
+function hide(id){document.getElementById(id).style.display='none'}
+function cellFromEvent(e,canvas,cell){
+const r=canvas.getBoundingClientRect();
+return{x:Math.floor((e.clientX-r.left)*(canvas.width/r.width)/cell),y:Math.floor((e.clientY-r.top)*(canvas.height/r.height)/cell)};
+}
+function onlyKings(b){for(let y=0;y<8;y++)for(let x=0;x<8;x++){const p=b[y][x];if(p&&p.t!==K)return false}return true}
+function toast(t,ms=2200){
+const el=document.getElementById('toast');el.textContent=t;el.classList.add('show');
+setTimeout(()=>el.classList.remove('show'),ms);
+}
+
+// Таймеры, которые гасятся при сбросе/выходе в меню
+const timers=new Set();
+function later(fn,ms){const id=setTimeout(()=>{timers.delete(id);fn()},ms);timers.add(id);return id}
+function clearTimers(){timers.forEach(clearTimeout);timers.clear()}
+
+// ============================================================
+// ЗВУК
+// ============================================================
+function beep(freq,dur,type='square',vol=.05){
+if(!soundOn)return;
+try{
+audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();
+const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+o.type=type;o.frequency.value=freq;g.gain.value=vol;
+o.connect(g);g.connect(audioCtx.destination);
+o.start();g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+dur);o.stop(audioCtx.currentTime+dur);
+}catch(e){}
+}
+function sfx(kind){
+switch(kind){
+case 'move':beep(330,.07);break;
+case 'capture':beep(150,.14,'sawtooth',.07);break;
+case 'check':beep(660,.1);setTimeout(()=>beep(880,.12),110);break;
+case 'win':[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,.18,'triangle',.08),i*140));break;
+case 'lose':beep(110,.4,'sawtooth',.07);break;
+}
+}
+function toggleSound(){
+soundOn=!soundOn;
+document.getElementById('soundBtn').textContent=soundOn?'🔊':'🔇';
+}
+
+// ============================================================
+// ИНИЦИАЛИЗАЦИЯ ДОСКИ
+// ============================================================
+function initBoard(){
+board=Array(8).fill().map(()=>Array(8).fill(null));
+for(let i=0;i<8;i++){
+board[0][i]={t:BACK_ROW[i],c:'b'};
+board[1][i]={t:P,c:'b'};
+board[7][i]={t:BACK_ROW[i],c:'w'};
+board[6][i]={t:P,c:'w'};
+}
+}
+
+// ============================================================
+// ОТРИСОВКА
+// ============================================================
+function drawGlyph(c2d,p,px,py,fs){
+c2d.textAlign='center';c2d.textBaseline='middle';
+if(STD.has(p.t)){
+c2d.font=`${fs}px ${SYM_FONT}`;
+const g=EMOJI['b_'+p.t]+'\uFE0E';
+c2d.lineWidth=3;
+if(p.c==='w'){c2d.strokeStyle='#103040';c2d.strokeText(g,px,py+1);c2d.fillStyle='#fff';c2d.fillText(g,px,py+1)}
+else{c2d.strokeStyle='#ff7ad0';c2d.strokeText(g,px,py+1);c2d.fillStyle='#14001e';c2d.fillText(g,px,py+1)}
+}else{
+c2d.font=`${fs}px ${EMO_FONT}`;c2d.fillStyle='#fff';
+c2d.fillText(EMOJI[p.c+'_'+p.t]||'?',px,py+1);
+}
+}
+function drawPieceAt(c2d,p,px,py,size){
+const w=p.c==='w';
+c2d.beginPath();c2d.arc(px,py,size/2-6,0,Math.PI*2);
+c2d.fillStyle=w?'rgba(120,230,255,.16)':'rgba(255,90,190,.16)';c2d.fill();
+c2d.strokeStyle=w?'rgba(120,230,255,.85)':'rgba(255,90,190,.85)';c2d.lineWidth=2.5;c2d.stroke();
+drawGlyph(c2d,p,px,py,size*0.5);
+}
+
+function drawBoard(){
+requestAnimationFrame(drawBoard);
+if(!gameActive)return;
+cx.clearRect(0,0,640,640);
+for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+cx.fillStyle=(x+y)%2===0?'#2a2a3d':'#4a3a5d';
+cx.fillRect(x*CELL,y*CELL,CELL,CELL);
+}
+// Координаты
+cx.font='bold 10px monospace';cx.textBaseline='alphabetic';
+for(let i=0;i<8;i++){
+cx.fillStyle='rgba(255,255,255,.4)';
+cx.textAlign='right';cx.fillText('abcdefgh'[i],i*CELL+CELL-4,8*CELL-5);
+cx.textAlign='left';cx.fillText(String(8-i),3,i*CELL+12);
+}
+// Последний ход
+if(lastMove){
+cx.fillStyle='rgba(255,230,0,.2)';
+cx.fillRect(lastMove.from.x*CELL,lastMove.from.y*CELL,CELL,CELL);
+cx.fillRect(lastMove.to.x*CELL,lastMove.to.y*CELL,CELL,CELL);
+}
+// Шах
+if(checkSq){
+const g=cx.createRadialGradient(checkSq.x*CELL+CELL/2,checkSq.y*CELL+CELL/2,4,checkSq.x*CELL+CELL/2,checkSq.y*CELL+CELL/2,CELL*.7);
+g.addColorStop(0,'rgba(255,0,60,.85)');g.addColorStop(1,'rgba(255,0,60,0)');
+cx.fillStyle=g;cx.fillRect(checkSq.x*CELL,checkSq.y*CELL,CELL,CELL);
+}
+// Выбранная фигура
+if(selected){
+cx.strokeStyle=oguriMode?'#f90':'#ff0';cx.lineWidth=4;
+cx.strokeRect(selected.x*CELL+2,selected.y*CELL+2,CELL-4,CELL-4);
+}
+// Возможные ходы
+legalMoves.forEach(m=>{
+cx.fillStyle=m.capture?'rgba(255,60,60,.5)':'rgba(0,255,255,.35)';
+cx.beginPath();cx.arc(m.x*CELL+CELL/2,m.y*CELL+CELL/2,m.capture?18:13,0,Math.PI*2);cx.fill();
+if(m.capture){cx.strokeStyle='rgba(255,60,60,.8)';cx.lineWidth=2;cx.stroke()}
+});
+// Подсказка Исаги
+if(hint){
+cx.strokeStyle='#0f0';cx.lineWidth=4;cx.setLineDash([8,4]);
+cx.beginPath();cx.moveTo(hint.from.x*CELL+CELL/2,hint.from.y*CELL+CELL/2);
+cx.lineTo(hint.to.x*CELL+CELL/2,hint.to.y*CELL+CELL/2);cx.stroke();
+cx.strokeRect(hint.to.x*CELL+3,hint.to.y*CELL+3,CELL-6,CELL-6);
+cx.setLineDash([]);
+}
+// Фигуры
+for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+const p=board[y][x];if(!p)continue;
+if(anim&&anim.to.x===x&&anim.to.y===y)continue;
+drawPieceAt(cx,p,x*CELL+CELL/2,y*CELL+CELL/2,CELL);
+if(p.t===LUDOMAN&&ludomanLosses[p.c]>0){
+cx.font='10px Arial';cx.textAlign='center';cx.textBaseline='middle';cx.fillStyle='#f33';
+cx.fillText('💀'.repeat(ludomanLosses[p.c]),x*CELL+CELL/2,y*CELL+CELL-8);
+}
+if((p.t===OGURI&&oguriUsed[p.c])||(p.t===ISAGI&&isagiUsed[p.c])){
+cx.font='bold 11px Arial';cx.textAlign='center';cx.textBaseline='middle';cx.fillStyle='#777';
+cx.fillText('✗',x*CELL+12,y*CELL+12);
+}
+}
+// Анимация хода
+if(anim){
+const t=Math.min(1,(performance.now()-anim.t0)/anim.dur),e=1-Math.pow(1-t,3);
+const px=(anim.from.x+(anim.to.x-anim.from.x)*e)*CELL+CELL/2;
+const py=(anim.from.y+(anim.to.y-anim.from.y)*e)*CELL+CELL/2;
+drawPieceAt(cx,anim.p,px,py,CELL);
+if(t>=1)anim=null;
+}
+if(mini.active)drawMini();
+}
+
+// ============================================================
+// ГЕНЕРАЦИЯ ХОДОВ
+// ============================================================
+function slideMoves(b,x,y,p,dirs){
+const list=[];
+for(const[dx,dy]of dirs){
+for(let i=1;i<8;i++){
+const nx=x+dx*i,ny=y+dy*i;
+if(!inside(nx,ny))break;
+const t=b[ny][nx];
+if(!t)list.push({x:nx,y:ny});
+else{if(t.c!==p.c)list.push({x:nx,y:ny,capture:true});break}
+}
+}
+return list;
+}
+function stepMoves(b,x,y,p,dirs){
+const list=[];
+for(const[dx,dy]of dirs){
+const nx=x+dx,ny=y+dy;
+if(inside(nx,ny)&&b[ny][nx]?.c!==p.c)list.push({x:nx,y:ny,capture:!!b[ny][nx]});
+}
+return list;
+}
+
+function getRawMoves(b,x,y,p,ep){
+const dir=p.c==='w'?-1:1;
+switch(p.t){
+case P:{
+const list=[];
+const ny=y+dir;
+if(inside(x,ny)&&!b[ny][x]){
+list.push({x,y:ny});
+const startRow=p.c==='w'?6:1;
+if(y===startRow&&!b[ny+dir][x])list.push({x,y:ny+dir,double:true});
+}
+for(const dx of[-1,1]){
+const nx=x+dx;
+if(!inside(nx,ny))continue;
+const t=b[ny][nx];
+if(t&&t.c!==p.c)list.push({x:nx,y:ny,capture:true});
+else if(!t&&ep&&ep.x===nx&&ep.y===ny){
+const v=b[y][nx];
+if(v&&v.t===P&&v.c!==p.c)list.push({x:nx,y:ny,ep:true,capture:true});
+}
+}
+return list;
+}
+case N:case OGURI:case PUSHKIN:return stepMoves(b,x,y,p,KNIGHT_D);
+case K:case LUDOMAN:case ISAGI:return stepMoves(b,x,y,p,KING_D);
+case CHESSMAN:return stepMoves(b,x,y,p,ORTH_D);
+case JOKER:{
+const list=[];
+for(const[dx,dy]of KING_D){
+for(let dist=1;dist<=2;dist++){
+const nx=x+dx*dist,ny=y+dy*dist;
+if(!inside(nx,ny))break;
+if(dist===2&&b[y+dy][x+dx])break;
+const t=b[ny][nx];
+if(!t)list.push({x:nx,y:ny});
+else{if(t.c!==p.c)list.push({x:nx,y:ny,capture:true});break}
+}
+}
+return list;
+}
+case CHECKER:{
+const list=[];
+for(const dx of[-1,1]){
+const nx=x+dx,ny=y+dir;
+if(inside(nx,ny)&&!b[ny][nx])list.push({x:nx,y:ny});
+}
+for(const dy of[-1,1])for(const dx of[-1,1]){
+const mxp=x+dx,myp=y+dy,lx=x+dx*2,ly=y+dy*2;
+if(inside(lx,ly)&&b[myp][mxp]&&b[myp][mxp].c!==p.c&&!b[ly][lx])
+list.push({x:lx,y:ly,cap:{x:mxp,y:myp},capture:true});
+}
+return list;
+}
+case DRAUGHTS:{
+const list=[];
+for(const[dx,dy]of DIAG_D){
+for(let i=1;i<8;i++){
+const nx=x+dx*i,ny=y+dy*i;
+if(!inside(nx,ny))break;
+if(!b[ny][nx])list.push({x:nx,y:ny});else break;
+}
+}
+for(const[dx,dy]of DIAG_D){
+let enemy=null;
+for(let i=1;i<8;i++){
+const nx=x+dx*i,ny=y+dy*i;
+if(!inside(nx,ny))break;
+const t=b[ny][nx];
+if(!t){
+if(enemy)list.push({x:nx,y:ny,cap:{x:enemy.x,y:enemy.y},capture:true});
+}else{
+if(t.c!==p.c&&!enemy)enemy={x:nx,y:ny};else break;
+}
+}
+}
+return list;
+}
+case R:return slideMoves(b,x,y,p,ORTH_D);
+case B:return slideMoves(b,x,y,p,DIAG_D);
+case Q:return slideMoves(b,x,y,p,QUEEN_D);
+}
+return [];
+}
+
+// ============================================================
+// ПРОВЕРКА ШАХА
+// ============================================================
+function isSquareAttacked(b,tx,ty,byColor){
+for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+const p=b[y][x];if(!p||p.c!==byColor)continue;
+if(p.t===P){
+const dir=p.c==='w'?-1:1;
+if(y+dir===ty&&Math.abs(x-tx)===1)return true;
+}else if(p.t===CHECKER||p.t===DRAUGHTS){
+// шашки бьют прыжком: «атакованная» клетка — та, где стоит бьемая фигура
+if(getRawMoves(b,x,y,p,null).some(m=>m.cap&&m.cap.x===tx&&m.cap.y===ty))return true;
+}else if(getRawMoves(b,x,y,p,null).some(m=>m.x===tx&&m.y===ty))return true;
+}
+return false;
+}
+
+function isInCheck(b,color){
+const king=findPiece(b,color,K);
+if(!king)return false;
+return isSquareAttacked(b,king.x,king.y,opp(color));
+}
+
+function simulate(b,from,to,move,p){
+const nb=cloneBoard(b);
+if(move.ep)nb[from.y][to.x]=null;
+if(move.cap)nb[move.cap.y][move.cap.x]=null;
+nb[to.y][to.x]=p;nb[from.y][from.x]=null;
+return nb;
+}
+
+// ============================================================
+// ЛЕГАЛЬНЫЕ ХОДЫ
+// ============================================================
+function getLegalMoves(b,x,y,p,ep){
+const raw=getRawMoves(b,x,y,p,ep);
+const legal=raw.filter(m=>!isInCheck(simulate(b,{x,y},{x:m.x,y:m.y},m,p),p.c));
+// Обязательное взятие для шашек (если нет шаха)
+if((p.t===CHECKER||p.t===DRAUGHTS)&&!isInCheck(b,p.c)){
+const caps=legal.filter(m=>m.capture);
+if(caps.length>0)return caps;
+}
+return legal;
+}
+
+// Рывок Огури: ход как ферзь (короля бить нельзя)
+function getDashMoves(b,x,y,p){
+return slideMoves(b,x,y,p,QUEEN_D).filter(m=>{
+if(m.capture&&b[m.y][m.x].t===K)return false;
+return !isInCheck(simulate(b,{x,y},{x:m.x,y:m.y},m,p),p.c);
+});
+}
+
+function hasAnyLegalMove(b,color,ep){
+for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+const p=b[y][x];
+if(p&&p.c===color&&getLegalMoves(b,x,y,p,ep).length>0)return true;
+}
+return false;
+}
+
+function allLegal(b,color,ep){
+const out=[];
+for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+const p=b[y][x];
+if(!p||p.c!==color)continue;
+for(const m of getLegalMoves(b,x,y,p,ep))out.push({from:{x,y},to:{x:m.x,y:m.y},move:m,p});
+}
+return out;
+}
+
+function victimOf(b,mvv){
+const m=mvv.move;
+if(m.ep)return b[mvv.from.y][mvv.to.x];
+if(m.cap)return b[m.cap.y][m.cap.x];
+return b[mvv.to.y][mvv.to.x];
+}
+
+// ============================================================
+// ИИ (минимакс с альфа-бета)
+// ============================================================
+function evaluate(b){
+let s=0;
+for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+const p=b[y][x];if(!p)continue;
+let v=VAL[p.t];
+if(p.t===P)v+=(p.c==='w'?6-y:y-1)*1.5;
+else if(p.t!==K)v+=(3.5-Math.max(Math.abs(x-3.5),Math.abs(y-3.5)))*0.8;
+s+=p.c==='w'?v:-v;
+}
+return s;
+}
+
+function applyForSearch(b,mvv){
+const nb=cloneBoard(b);
+const{from,to,move,p}=mvv;
+if(move.ep)nb[from.y][to.x]=null;
+if(move.cap)nb[move.cap.y][move.cap.x]=null;
+let np=p;
+if(p.t===P&&(to.y===0||to.y===7))np={t:Q,c:p.c};
+else if(p.t===CHECKER&&(to.y===0||to.y===7))np={t:DRAUGHTS,c:p.c};
+nb[to.y][to.x]=np;nb[from.y][from.x]=null;
+return{b:nb,ep:(p.t===P&&move.double)?{x:to.x,y:(from.y+to.y)/2}:null};
+}
+
+function search(b,color,ep,depth,alpha,beta){
+if(depth===0)return(color==='w'?1:-1)*evaluate(b);
+const moves=allLegal(b,color,ep);
+if(!moves.length)return isInCheck(b,color)?-50000-depth:0;
+for(const m of moves){const v=victimOf(b,m);m.key=v?VAL[v.t]*10-VAL[m.p.t]:0}
+moves.sort((a,c)=>c.key-a.key);
+let best=-Infinity;
+for(const m of moves){
+const r=applyForSearch(b,m);
+const sc=-search(r.b,opp(color),r.ep,depth-1,-beta,-alpha);
+if(sc>best)best=sc;
+if(best>alpha)alpha=best;
+if(alpha>=beta)break;
+}
+return best;
+}
+
+function isGamble(b,mvv){
+const v=victimOf(b,mvv);
+return !!v&&(GAMBLERS.has(v.t)||GAMBLERS.has(mvv.p.t));
+}
+
+// Возвращает список {mv,sc}, лучший первым
+function findBestMove(b,color,ep,depth,opts={}){
+const cands=allLegal(b,color,ep);
+if(opts.dash){
+for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+const p=b[y][x];
+if(p&&p.c===color&&p.t===OGURI){
+for(const m of getDashMoves(b,x,y,p))cands.push({from:{x,y},to:{x:m.x,y:m.y},move:m,p,dash:true});
+}
+}
+}
+if(!cands.length)return[];
+const sign=color==='w'?1:-1,noise=opts.noise||0;
+const scored=[];
+for(const m of cands){
+const r=applyForSearch(b,m);
+let sc=-search(r.b,opp(color),r.ep,depth-1,-Infinity,Infinity);
+if(isGamble(b,m)){
+// успех/провал дуэли ~ 50/50: при провале нападающий погибает
+const nb=cloneBoard(b);nb[m.from.y][m.from.x]=null;
+sc=0.5*sc+0.5*sign*evaluate(nb);
+}
+if(m.dash)sc-=6;
+scored.push({mv:m,sc:sc+Math.random()*noise});
+}
+scored.sort((a,c)=>c.sc-a.sc);
+return scored;
+}
+
+// ============================================================
+// ОСНОВНАЯ ЛОГИКА
+// ============================================================
+function finishGame(text){
+gameOver=true;
+selected=null;legalMoves=[];hint=null;oguriMode=false;
+setStatus(text);
+sfx('win');
+updateUI();
+}
+
+function checkGameEnd(prefix){
+const pre=prefix?prefix+' ':'';
+if(onlyKings(board)){finishGame(pre+'ОСТАЛИСЬ ТОЛЬКО КОРОЛИ — НИЧЬЯ!');return true}
+if(!hasAnyLegalMove(board,current,enPassant)){
+if(isInCheck(board,current))finishGame(`${pre}МАТ! ${colorName(opp(current))} ПОБЕДИЛИ!`);
+else finishGame(pre+'ПАТ! НИЧЬЯ!');
+return true;
+}
+return false;
+}
+
+function endTurn(msg){
+selected=null;legalMoves=[];hint=null;oguriMode=false;
+current=opp(current);
+updateUI();
+if(checkGameEnd(msg))return;
+setStatus((msg?msg+' ':'')+turnText());
+if(checkSq)sfx('check');
+if(gameMode==='bot'&&current==='b')later(makeBotMove,600);
+}
+
+function executeMove(from,to,move,msg){
+const p=board[from.y][from.x];
+const victim=victimOf(board,{from,to,move});
+selected=null;legalMoves=[];hint=null;oguriMode=false;
+if(victim)captured[p.c].push(victim);
+lastMove={from,to};
+anim={p,from,to,t0:performance.now(),dur:200};
+// Взят король — мгновенная победа (Джокер и т.п.)
+if(victim&&victim.t===K){
+board[to.y][to.x]=p;board[from.y][from.x]=null;
+finishGame(p.t===JOKER?`🃏 ДЖОКЕР СЪЕЛ КОРОЛЯ! ${colorName(p.c)} ПОБЕДИЛИ!`:`КОРОЛЬ ПАЛ! ${colorName(p.c)} ПОБЕДИЛИ!`);
+return;
+}
+if(move.ep)board[from.y][to.x]=null;
+if(move.cap)board[move.cap.y][move.cap.x]=null;
+board[to.y][to.x]=p;board[from.y][from.x]=null;
+enPassant=(p.t===P&&move.double)?{x:to.x,y:(from.y+to.y)/2}:null;
+sfx(victim?'capture':'move');
+// Превращение пешки
+if(p.t===P&&(to.y===0||to.y===7)){
+if(gameMode==='bot'&&p.c==='b'){p.t=Q;endTurn(msg);}
+else{promoPending={p,msg};show('promoOverlay');updateUI();}
+return;
+}
+// Превращение шашки
+if(p.t===CHECKER&&(to.y===0||to.y===7))p.t=DRAUGHTS;
+endTurn(msg);
+}
+
+function promote(t){
+if(!promoPending)return;
+const{p,msg}=promoPending;
+p.t=t;promoPending=null;
+hide('promoOverlay');
+endTurn(msg);
+}
+
+// Смерть фигуры (проигрыш дуэли и т.п.) с проверкой шаха
+function handleDeath(color,pos,msg){
+const dead=board[pos.y][pos.x];
+board[pos.y][pos.x]=null;
+if(dead)captured[opp(color)].push(dead);
+selected=null;legalMoves=[];hint=null;oguriMode=false;
+sfx('lose');
+if(dead&&dead.t===K){finishGame(`${msg} КОРОЛЬ ПАЛ! ${colorName(opp(color))} ПОБЕДИЛИ!`);return}
+continueOrPass(color,msg);
+}
+
+// Ход не состоялся (фигура погибла / дуэль не удалась). Если король игрока
+// остался под шахом — ход не передаётся, нужно спасать короля; иначе ход уходит сопернику.
+function continueOrPass(color,msg){
+updateUI();
+if(isInCheck(board,color)){
+if(checkGameEnd(msg))return;
+setStatus(msg+' КОРОЛЬ ПОД ШАХОМ! СПАСАЙ!');
+if(gameMode==='bot'&&current==='b')later(makeBotMove,700);
+}else{
+enPassant=null;
+endTurn(msg);
+}
+}
+
+function tryMove(from,to,move,dash){
+const attacker=board[from.y][from.x];
+const target=victimOf(board,{from,to,move});
+const ctx={attacker,from,to,move,target,dash:!!dash};
+if(dash)oguriUsed[attacker.c]=true;
+selected=null;legalMoves=[];hint=null;oguriMode=false;
+if(target){
+if(attacker.t===LUDOMAN||target.t===LUDOMAN){startRoulette(ctx);return}
+if(attacker.t===PUSHKIN||target.t===PUSHKIN){startDuel(ctx);return}
+if(attacker.t===CHESSMAN||target.t===CHESSMAN){startChessDuel(ctx);return}
+}
+executeMove(from,to,move);
+}
+
+function selectPiece(x,y){
+selected={x,y};
+legalMoves=getLegalMoves(board,x,y,board[y][x],enPassant);
+}
+
+function isBusy(){return gameOver||mini.active||!!rouletteCtx||!!duelCtx||!!promoPending}
+
+// ============================================================
+// КЛИКИ ПО ДОСКЕ
+// ============================================================
+cv.addEventListener('click',e=>{
+if(isBusy()||botThinking)return;
+if(gameMode==='bot'&&current==='b')return;
+const{x,y}=cellFromEvent(e,cv,CELL);
+if(!inside(x,y))return;
+if(oguriMode){handleOguri(x,y);return}
+const p=board[y][x];
+if(selected){
+const m=legalMoves.find(m=>m.x===x&&m.y===y);
+if(m){tryMove({x:selected.x,y:selected.y},{x,y},m);return}
+if(selected.x===x&&selected.y===y){selected=null;legalMoves=[];return}
+if(p&&p.c===current){selectPiece(x,y);return}
+selected=null;legalMoves=[];
+}else if(p&&p.c===current)selectPiece(x,y);
+});
+
+document.addEventListener('keydown',e=>{
+if(e.key==='Escape'&&gameActive&&!isBusy()){
+selected=null;legalMoves=[];
+if(oguriMode){oguriMode=false;setStatus(turnText())}
+}
+});
+
+// ============================================================
+// СПОСОБНОСТИ: ИСАГИ И ОГУРИ
+// ============================================================
+function useIsagi(){
+if(isBusy()||botThinking||isagiUsed[current]||!findPiece(board,current,ISAGI))return;
+if(gameMode==='bot'&&current==='b')return;
+isagiUsed[current]=true;
+selected=null;legalMoves=[];oguriMode=false;
+setStatus('🧿 ИСАГИ ЧИТАЕТ ПОЛЕ...');
+updateUI();
+later(()=>{
+const scored=findBestMove(board,current,enPassant,2,{});
+if(!scored.length){setStatus(turnText());return}
+const m=scored[0].mv;
+hint={from:m.from,to:m.to};
+setStatus('🧿 ИСАГИ: ЛУЧШИЙ ХОД ПОДСВЕЧЕН ЗЕЛЁНЫМ.');
+},40);
+}
+
+function useOguri(){
+if(isBusy()||botThinking||oguriUsed[current])return;
+if(gameMode==='bot'&&current==='b')return;
+if(oguriMode){oguriMode=false;selected=null;legalMoves=[];setStatus(turnText());return}
+const pos=findPiece(board,current,OGURI);
+if(!pos){setStatus('ОГУРИ НЕТ НА ДОСКЕ. '+turnText());return}
+const moves=getDashMoves(board,pos.x,pos.y,board[pos.y][pos.x]);
+if(!moves.length){setStatus('У ОГУРИ НЕТ ХОДОВ ДЛЯ РЫВКА. '+turnText());return}
+oguriMode=true;hint=null;selected=pos;legalMoves=moves;
+setStatus('🐴 РЫВОК ОГУРИ: ХОДИ КАК ФЕРЗЬ! (КНОПКА / ESC — ОТМЕНА)');
+}
+
+function handleOguri(x,y){
+const m=legalMoves.find(m=>m.x===x&&m.y===y);
+if(m){tryMove({x:selected.x,y:selected.y},{x,y},m,true);return}
+oguriMode=false;selected=null;legalMoves=[];
+setStatus(turnText());
+}
+
+// ============================================================
+// 🎰 РУЛЕТКА ЛУДОМАНА
+// ============================================================
+function setRouletteButtons(on){
+document.querySelectorAll('#rouletteBtns button').forEach(b=>b.disabled=!on);
+}
+function rouletteNum(n){
+const c=n===0?'#0f6':REDS.has(n)?'#f33':'#bbb';
+return `<b style="color:${c};font-size:20px">${n}</b>`;
+}
+
+function startRoulette(ctx){
+rouletteCtx=ctx;
+ctx.owner=ctx.attacker.t===LUDOMAN?ctx.attacker.c:ctx.target.c;
+const botOwns=gameMode==='bot'&&ctx.owner==='b';
+const role=ctx.attacker.t===LUDOMAN
+?'Лудоман атакует: победа — взятие; поражение — потеря хода и 💀 (3 💀 = проигрыш партии).'
+:'Лудомана атакуют: победа — нападавший уничтожен; поражение — Лудоман погибает.';
+document.getElementById('rouletteText').innerHTML=
+`<div style="color:#fff">${colorName(ctx.owner)} ДЕЛАЮТ СТАВКУ${botOwns?' (БОТ)':''}</div><div style="color:#888;font-size:8px;margin-top:8px">${role}<br>Зеро — ДЖЕКПОТ: мгновенная победа!</div>`;
+document.getElementById('rouletteResult').innerHTML='';
+setRouletteButtons(!botOwns);
+show('rouletteOverlay');
+if(botOwns){
+later(()=>{
+const r=Math.random();
+spinRoulette(r<.47?'red':r<.94?'black':'zero');
+},1100);
+}
+}
+
+function spinRoulette(bet){
+const ctx=rouletteCtx;
+if(!ctx||ctx.spinning)return;
+ctx.spinning=true;
+setRouletteButtons(false);
+const res=document.getElementById('rouletteResult');
+const n=Math.floor(Math.random()*37);
+const col=n===0?'zero':REDS.has(n)?'red':'black';
+const betName={red:'КРАСНОЕ',black:'ЧЁРНОЕ',zero:'ЗЕРО'}[bet];
+let ticks=0;
+const tick=()=>{
+if(rouletteCtx!==ctx)return;
+if(ticks++<14){
+res.innerHTML=`🎡 ${rouletteNum(Math.floor(Math.random()*37))}<br>СТАВКА: ${betName}`;
+beep(500+ticks*20,.03,'square',.02);
+later(tick,60+ticks*14);
+}else{
+const win=bet===col;
+res.innerHTML=`🎡 ${rouletteNum(n)}<br>СТАВКА: ${betName}<br>${win?'✅ ВЫИГРЫШ!':'❌ ПРОИГРЫШ!'}`;
+later(()=>{
+rouletteCtx=null;
+hide('rouletteOverlay');
+applyRoulette(ctx,win,win&&bet==='zero');
+},1500);
+}
+};
+tick();
+}
+
+function applyRoulette(ctx,win,jackpot){
+const own=ctx.owner;
+if(jackpot){finishGame(`🎰 ДЖЕКПОТ! ЗЕРО! ${colorName(own)} ПОБЕДИЛИ!`);return}
+if(ctx.attacker.t===LUDOMAN){
+if(win){executeMove(ctx.from,ctx.to,ctx.move,'🎰 ЛУДОМАН ВЫИГРАЛ!');return}
+ludomanLosses[own]++;
+sfx('lose');
+if(ludomanLosses[own]>=3){finishGame(`💀💀💀 ЛУДОМАН ПРОИГРАЛ ВСЁ! ${colorName(opp(own))} ПОБЕДИЛИ!`);return}
+continueOrPass(own,'💀 ЛУДОМАН ПРОИГРАЛ!');
+}else{
+if(win)handleDeath(ctx.attacker.c,ctx.from,'🎰 ЛУДОМАН ВЫИГРАЛ! НАПАДАВШИЙ УНИЧТОЖЕН.');
+else executeMove(ctx.from,ctx.to,ctx.move,'🎰 ЛУДОМАН ПРОИГРАЛ И ПАЛ.');
+}
+}
+
+// ============================================================
+// 🤺 ДУЭЛЬ ПУШКИНА (на реакцию)
+// ============================================================
+function setDuelPhase(text,cls){
+const el=document.getElementById('duelPhase');
+el.textContent=text;el.className=cls;
+}
+
+function startDuel(ctx){
+duelCtx=ctx;
+// В режиме с ботом стреляет человек (белые), иначе — ходящий игрок
+ctx.shooter=gameMode==='bot'?'w':ctx.attacker.c;
+ctx.shooterIsAttacker=ctx.shooter===ctx.attacker.c;
+ctx.state='attn';ctx.done=false;
+setDuelPhase('ВНИМАНИЕ...','ph-attn');
+document.getElementById('duelResult').innerHTML=`СТРЕЛЯЮТ: ${colorName(ctx.shooter)}<br><span style="color:#888;font-size:8px">Жми ОГОНЬ только после сигнала!</span>`;
+document.getElementById('fireBtn').disabled=false;
+show('duelOverlay');
+later(()=>{
+if(duelCtx!==ctx||ctx.done)return;
+ctx.state='wait';
+setDuelPhase('ЖДИ...','ph-wait');
+later(()=>{
+if(duelCtx!==ctx||ctx.done)return;
+ctx.state='fire';ctx.t0=performance.now();
+setDuelPhase('ОГОНЬ!','ph-fire');
+beep(880,.15,'sawtooth',.08);
+const ghost=200+Math.random()*280;
+later(()=>{if(duelCtx===ctx&&!ctx.done)endDuel(ctx,false,`Противник выстрелил первым (${Math.round(ghost)} мс)`)},ghost);
+},900+Math.random()*2200);
+},800);
+}
+
+function duelFire(){
+const ctx=duelCtx;
+if(!ctx||ctx.done)return;
+if(ctx.state==='fire'){
+endDuel(ctx,true,`Реакция: ${Math.round(performance.now()-ctx.t0)} мс`);
+}else endDuel(ctx,false,'ФАЛЬСТАРТ!');
+}
+
+function endDuel(ctx,shooterWins,txt){
+ctx.done=true;
+document.getElementById('fireBtn').disabled=true;
+document.getElementById('duelResult').innerHTML=`${shooterWins?'✅ ПОБЕДА!':'❌ ПОРАЖЕНИЕ!'}<br><span style="font-size:9px">${txt}</span>`;
+later(()=>{
+duelCtx=null;
+hide('duelOverlay');
+const attackerWins=ctx.shooterIsAttacker?shooterWins:!shooterWins;
+if(attackerWins)executeMove(ctx.from,ctx.to,ctx.move,'🤺 ДУЭЛЬ ВЫИГРАНА!');
+else handleDeath(ctx.attacker.c,ctx.from,'🤺 ДУЭЛЬ ПРОИГРАНА — ФИГУРА ПАЛА.');
+},1500);
+}
+
+// ============================================================
+// ♟️ ШАХМАТНАЯ ДУЭЛЬ (мини-партия, по 5 минут)
+// ============================================================
+function initMiniBoard(){
+const b=Array(8).fill().map(()=>Array(8).fill(null));
+const row='rnbqkbnr';
+for(let i=0;i<8;i++){
+b[0][i]={t:row[i],c:'b'};b[1][i]={t:P,c:'b'};
+b[6][i]={t:P,c:'w'};b[7][i]={t:row[i],c:'w'};
+}
+return b;
+}
+
+function updateMiniTimer(){
+const t=document.getElementById('miniTimer');
+t.textContent=`${mini.turn==='w'?'▶ ':''}БЕЛЫЕ ${fmtTime(mini.clocks.w)} | ${fmtTime(mini.clocks.b)} ЧЁРНЫЕ${mini.turn==='b'?' ◀':''}`;
+}
+
+function startChessDuel(ctx){
+const A=ctx.attacker.c;
+mini={
+active:true,over:false,ctx,board:initMiniBoard(),turn:'w',
+clocks:{w:300,b:300},sel:null,legal:[],last:null,
+botSide:gameMode==='bot'?(A==='b'?'w':'b'):null
+};
+document.getElementById('miniMsg').innerHTML=
+`Нападающий (${colorName(A)}) играет БЕЛЫМИ.<br>Выиграл нападающий — взятие; проиграл — фигура гибнет; ничья — ход потерян.`;
+updateMiniTimer();
+show('chessOverlay');
+clearInterval(miniIv);
+miniIv=setInterval(()=>{
+if(!mini.active||mini.over)return;
+mini.clocks[mini.turn]--;
+updateMiniTimer();
+if(mini.clocks[mini.turn]<=0)endMini(opp(mini.turn),'ВРЕМЯ ВЫШЛО!');
+},1000);
+if(mini.botSide==='w')later(botMiniMove,700);
+}
+
+function doMiniMove(from,to){
+const p=mini.board[from.y][from.x];
+mini.board[to.y][to.x]=p;mini.board[from.y][from.x]=null;
+if(p.t===P&&(to.y===0||to.y===7))mini.board[to.y][to.x]={t:Q,c:p.c};
+mini.sel=null;mini.legal=[];mini.last={from,to};
+mini.turn=opp(mini.turn);
+updateMiniTimer();
+if(!hasAnyLegalMove(mini.board,mini.turn,null)){
+if(isInCheck(mini.board,mini.turn))endMini(opp(mini.turn),'МАТ!');
+else endMini('draw','ПАТ!');
+return;
+}
+const extra=document.getElementById('miniMsg');
+if(isInCheck(mini.board,mini.turn)){extra.textContent='ШАХ!';beep(660,.08)}
+else extra.textContent='';
+beep(300,.05);
+if(mini.turn===mini.botSide)later(botMiniMove,500);
+}
+
+function botMiniMove(){
+if(!mini.active||mini.over||mini.turn!==mini.botSide)return;
+const scored=findBestMove(mini.board,mini.turn,null,2,{noise:3});
+if(!scored.length)return;
+const m=scored[0].mv;
+doMiniMove(m.from,m.to);
+}
+
+mv.addEventListener('click',e=>{
+if(!mini.active||mini.over||mini.turn===mini.botSide)return;
+const{x,y}=cellFromEvent(e,mv,MINI_CELL);
+if(!inside(x,y))return;
+const p=mini.board[y][x];
+if(mini.sel){
+const m=mini.legal.find(m=>m.x===x&&m.y===y);
+if(m){doMiniMove(mini.sel,{x,y});return}
+mini.sel=null;mini.legal=[];
+}
+if(p&&p.c===mini.turn){mini.sel={x,y};mini.legal=getLegalMoves(mini.board,x,y,p,null)}
+});
+
+function surrenderMini(){
+if(!mini.active||mini.over)return;
+const side=mini.botSide?opp(mini.botSide):mini.turn;
+endMini(opp(side),'СДАЛСЯ!');
+}
+
+function endMini(winnerSide,reason){
+if(!mini.active||mini.over)return;
+mini.over=true;
+clearInterval(miniIv);
+const ctx=mini.ctx;
+const txt=winnerSide==='draw'?'НИЧЬЯ':winnerSide==='w'?'ПОБЕДИЛ НАПАДАЮЩИЙ':'ПОБЕДИЛ ЗАЩИТНИК';
+document.getElementById('miniMsg').innerHTML=`${reason}<br><b>${txt}</b>`;
+later(()=>{
+mini={active:false};
+hide('chessOverlay');
+if(winnerSide==='draw'){
+continueOrPass(ctx.attacker.c,'👤 ДУЭЛЬ — НИЧЬЯ.');
+}else if(winnerSide==='w')executeMove(ctx.from,ctx.to,ctx.move,'👤 ШАХМАТНАЯ ДУЭЛЬ ВЫИГРАНА!');
+else handleDeath(ctx.attacker.c,ctx.from,'👤 ШАХМАТНАЯ ДУЭЛЬ ПРОИГРАНА — ФИГУРА ПАЛА.');
+},1800);
+}
+
+function drawMini(){
+mcx.clearRect(0,0,400,400);
+for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+mcx.fillStyle=(x+y)%2===0?'#3a3a55':'#5a4a7a';
+mcx.fillRect(x*MINI_CELL,y*MINI_CELL,MINI_CELL,MINI_CELL);
+}
+if(mini.last){
+mcx.fillStyle='rgba(255,230,0,.22)';
+mcx.fillRect(mini.last.from.x*MINI_CELL,mini.last.from.y*MINI_CELL,MINI_CELL,MINI_CELL);
+mcx.fillRect(mini.last.to.x*MINI_CELL,mini.last.to.y*MINI_CELL,MINI_CELL,MINI_CELL);
+}
+if(mini.sel){
+mcx.strokeStyle='#ff0';mcx.lineWidth=3;
+mcx.strokeRect(mini.sel.x*MINI_CELL+2,mini.sel.y*MINI_CELL+2,MINI_CELL-4,MINI_CELL-4);
+}
+mini.legal.forEach(m=>{
+mcx.fillStyle=m.capture?'rgba(255,60,60,.5)':'rgba(0,255,255,.35)';
+mcx.beginPath();mcx.arc(m.x*MINI_CELL+MINI_CELL/2,m.y*MINI_CELL+MINI_CELL/2,m.capture?13:8,0,Math.PI*2);mcx.fill();
+});
+for(let y=0;y<8;y++)for(let x=0;x<8;x++){
+const p=mini.board[y][x];
+if(p)drawPieceAt(mcx,p,x*MINI_CELL+MINI_CELL/2,y*MINI_CELL+MINI_CELL/2,MINI_CELL);
+}
+}
+
+// ============================================================
+// БОТ
+// ============================================================
+function makeBotMove(){
+if(gameOver||gameMode!=='bot'||current!=='b'||botThinking||mini.active||rouletteCtx||duelCtx||promoPending)return;
+botThinking=true;
+setStatus('🤖 БОТ ДУМАЕТ...');
+later(()=>{
+let scored=[];
+try{
+scored=findBestMove(board,'b',enPassant,[1,2,4][difficulty],{dash:!oguriUsed.b&&difficulty>0,noise:[40,4,.8][difficulty]});
+}catch(err){console.error(err)}
+botThinking=false;
+if(!scored.length){checkGameEnd();updateUI();return}
+const m=scored[0].mv;
+tryMove(m.from,m.to,m.move,!!m.dash);
+},80);
+}
+
+// ============================================================
+// ИНТЕРФЕЙС
+// ============================================================
+function updateUI(){
+const k=findPiece(board,current,K);
+checkSq=(k&&isInCheck(board,current))?k:null;
+const glyphs=a=>a.map(v=>EMOJI[v.c+'_'+v.t]).join(' ');
+document.getElementById('trayW').textContent=glyphs(captured.w);
+document.getElementById('trayB').textContent=glyphs(captured.b);
+const humanTurn=!(gameMode==='bot'&&current==='b');
+const off=gameOver||!humanTurn;
+const ib=document.getElementById('isagiBtn'),ob=document.getElementById('oguriBtn');
+ib.disabled=off||isagiUsed[current]||!findPiece(board,current,ISAGI);
+ob.disabled=off||oguriUsed[current]||!findPiece(board,current,OGURI);
+ib.textContent=isagiUsed[current]?'🧿 Исаги ✗':'🧿 Исаги';
+ob.textContent=oguriUsed[current]?'🐴 Огури ✗':'🐴 Огури';
+}
+
+function cycleDifficulty(){
+difficulty=(difficulty+1)%3;
+document.getElementById('diffBtn').textContent='⚙️ Сложность: '+DIFF_NAMES[difficulty];
+}
+
+function showRules(){show('rulesOverlay')}
+function hideRules(){hide('rulesOverlay')}
+
+function resetGame(){
+clearTimers();
+clearInterval(miniIv);
+['rouletteOverlay','duelOverlay','chessOverlay','promoOverlay','rulesOverlay'].forEach(hide);
+mini={active:false};
+rouletteCtx=null;duelCtx=null;promoPending=null;botThinking=false;
+initBoard();
+current='w';selected=null;legalMoves=[];gameOver=false;enPassant=null;
+ludomanLosses={w:0,b:0};oguriUsed={w:false,b:false};isagiUsed={w:false,b:false};
+oguriMode=false;hint=null;lastMove=null;anim=null;checkSq=null;
+captured={w:[],b:[]};
+updateUI();
+setStatus(gameMode==='bot'?`ТЫ — БЕЛЫЕ. БОТ: ${DIFF_NAMES[difficulty]}. ХОД БЕЛЫХ.`:'ХОД БЕЛЫХ.');
+}
+
+function startGame(mode){
+gameMode=mode;
+hide('mainMenu');
+document.getElementById('gameWrap').style.display='flex';
+gameActive=true;
+resetGame();
+}
+
+function showMenu(){
+clearTimers();
+clearInterval(miniIv);
+mini={active:false};rouletteCtx=null;duelCtx=null;promoPending=null;botThinking=false;
+['rouletteOverlay','duelOverlay','chessOverlay','promoOverlay','rulesOverlay'].forEach(hide);
+gameActive=false;
+document.getElementById('gameWrap').style.display='none';
+show('mainMenu');
+}
+
+// Пасхалка: клики по автору
+function authorClick(){
+authorClicks++;
+if(authorClicks===5){
+document.body.classList.add('disco');
+toast('🪩 ДИСКО-РЕЖИМ!');
+setTimeout(()=>document.body.classList.remove('disco'),8000);
+}else if(authorClicks===10){
+document.body.classList.add('matrix');
+toast('🟢 МАТРИЦА...');
+}else if(authorClicks>=15){
+document.body.classList.remove('matrix','disco');
+toast('Всё как раньше.');
+authorClicks=0;
+}
+}
+
+// ============================================================
+// СТАРТ
+// ============================================================
+initBoard();
+drawBoard();
+</script>
+</body>
+</html>
